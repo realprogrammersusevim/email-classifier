@@ -11,7 +11,11 @@ from torchtext.vocab import build_vocab_from_iterator
 from model import EmailClassifier
 from spam import Spam
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    format="[%(levelname)s] %(asctime)s - %(message)s",
+    datefmt="%d-%b-%y %H:%M:%S",
+    level=logging.INFO,
+)
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -29,29 +33,19 @@ logging.info("Building Vocab")
 vocab = build_vocab_from_iterator(yield_tokens(train_iter), specials=["<unk>"])
 vocab.set_default_index(vocab["<unk>"])
 
-# text_pipeline = lambda x: vocab(tokenizer(x))
-# label_pipeline = lambda x: int(x) - 1
+text_pipeline = lambda x: vocab(tokenizer(x))
+label_pipeline = lambda x: int(x) - 1
 
 
-def text_pipeline(x):
-    return vocab(tokenizer(x))
-
-
-def label_pipeline(x):
-    try:
-        print(x)
-        return int(x) - 1
-    except ValueError:
-        logging.info(f"Invalid label: {x}")
-        return 0
-
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = torch.device("cpu")
+logging.debug(f"Using device: {device}")
 
 
 def collate_batch(batch):
     label_list, text_list, offsets = [], [], [0]
-    for _label, _text in batch:
+    for _sample in batch:
+        _label, _text = _sample["label"], _sample["text"]
         label_list.append(label_pipeline(_label))
         processed_text = torch.tensor(text_pipeline(_text), dtype=torch.int64)
         text_list.append(processed_text)
@@ -67,7 +61,8 @@ dataloader = DataLoader(
     train_iter, batch_size=8, shuffle=False, collate_fn=collate_batch
 )
 
-num_class = len(set([label for (label, text) in train_iter]))
+# num_class = len(set([label for (label, text) in train_iter]))
+num_class = 2
 vocab_size = len(vocab)
 emsize = 64
 model = EmailClassifier(vocab_size, emsize, num_class).to(device)
