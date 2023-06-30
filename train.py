@@ -9,7 +9,7 @@ from torchtext.utils import logging
 from torchtext.vocab import build_vocab_from_iterator
 
 from model import EmailClassifier
-from spam import Spam
+from spamcorpus import Spam
 
 logging.basicConfig(
     format="[%(levelname)s] %(asctime)s - %(message)s",
@@ -44,8 +44,7 @@ logging.debug(f"Using device: {device}")
 
 def collate_batch(batch):
     label_list, text_list, offsets = [], [], [0]
-    for _sample in batch:
-        _label, _text = _sample["label"], _sample["text"]
+    for _label, _text in batch:
         label_list.append(label_pipeline(_label))
         processed_text = torch.tensor(text_pipeline(_text), dtype=torch.int64)
         text_list.append(processed_text)
@@ -163,9 +162,14 @@ def predict(text, text_pipeline):
         return output.argmax(1).item() + 1
 
 
-with open("dataset/2/00013.372ec9dc663418ca71f7d880a76f117a", "rb") as f:
-    raw_string = f.read()
-    test_string = raw_string.decode("utf-8", errors="ignore")
-
 model = model.to("cpu")
-print(f"This is {spam_label[predict(test_string, text_pipeline)]}")
+
+
+for i in ["dataset/1/0000.eml", "dataset/2/0010.eml"]:
+    with open(os.path.join(SCRIPT_DIR, i), "r") as f:
+        test_string = f.read()
+
+    print(f"This is {spam_label[predict(test_string, text_pipeline)]}")
+
+
+torch.save(model, os.path.join(SCRIPT_DIR, "model.pth"))

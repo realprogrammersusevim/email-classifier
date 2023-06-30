@@ -1,36 +1,51 @@
 import os
+import random
 
-import chardet
 from torch.utils.data import Dataset
 
 
 class Spam(Dataset):
+    """
+    Spam dataset
+
+    Parameters
+    ----------
+    root_dir : str
+        Path to the root directory of the dataset
+    split : str, optional
+        Split of the dataset to use
+    """
+
     def __init__(self, root_dir, split="train"):
         self.root_dir = root_dir
-        self.file_paths = []
-        self.labels = []
         self.split = split
+        self.samples = []
+        self.index = len(self.samples)
 
-        self._get_file_paths_and_labels()
+        self._get_files_and_labels()
 
     def __len__(self):
-        return len(self.file_paths)
+        return len(self.samples)
 
     def __getitem__(self, idx):
-        file_path = self.file_paths[idx]
-        label = self.labels[idx]
+        sample = self.samples[idx]
 
-        with open(file_path, "rb") as file:
-            raw_data = file.read()
-            encoding = chardet.detect(raw_data)["encoding"]
-            if encoding is None:
-                encoding = "utf-8"
-            text = raw_data.decode(encoding, errors="replace")
+        with open(sample["file_path"], "r") as f:
+            text = f.read()
 
-        sample = {"text": text, "label": label}
+        sample = (sample["label"], text)
         return sample
 
-    def _get_file_paths_and_labels(self):
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index == 0:
+            raise StopIteration
+        self.index -= 1
+        return self[self.index]
+
+    def _get_files_and_labels(self):
         classes = os.listdir(self.root_dir)
         for class_name in classes:
             class_dir = os.path.join(self.root_dir, class_name)
@@ -47,6 +62,11 @@ class Spam(Dataset):
                     selected_files = files[split_idx_val:]  # 5% for validation
 
                 for file_name in selected_files:
+                    current_sample = {}
                     file_path = os.path.join(class_dir, file_name)
-                    self.file_paths.append(file_path)
-                    self.labels.append(int(class_name))
+                    current_sample["file_path"] = str(file_path)
+                    current_sample["label"] = int(class_name)
+                    self.samples.append(current_sample)
+
+        random.shuffle(self.samples)
+        self.index = len(self.samples)
