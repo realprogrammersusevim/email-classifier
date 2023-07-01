@@ -165,7 +165,7 @@ def predict(text, text_pipeline):
 model = model.to("cpu")
 
 
-for i in ["dataset/1/0000.eml", "dataset/2/0010.eml"]:
+for i in ["dataset/1/00000.eml", "dataset/2/0010.eml"]:
     with open(os.path.join(SCRIPT_DIR, i), "r") as f:
         test_string = f.read()
 
