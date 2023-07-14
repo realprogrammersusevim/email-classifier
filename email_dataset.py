@@ -1,12 +1,11 @@
-import email
-import imaplib
+import csv
 import logging
 import os
-import time
-from os import getenv
+from os import path
 
 import dotenv
-import pandas as pd
+from imap_tools import BaseMailBox, MailBox
+from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO)
 config = dotenv.dotenv_values(".env")
@@ -14,43 +13,48 @@ config = dotenv.dotenv_values(".env")
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # Initialize the dataset file if it doesn't exist
-for dataset in ["spam.csv", "ham.csv"]:
-    if not os.path.exists(os.path.join(SCRIPT_DIR, dataset)):
-        logging.info(f"Cannot find {dataset}, creating a new one...")
-        pd.DataFrame(
-            columns=[
-                "time",
-                "subject",
-                "content",
-                "receiving_address",
-                "sending_address",
-                "mime_type",
-            ]
-        ).to_csv(dataset)
+if not os.path.exists(os.path.join(SCRIPT_DIR, "dataset.csv")):
+    logging.info(f"Cannot find dataset.csv, creating a new one...")
 
 
-logging.info("Connecting to IMAP server")
-imap = imaplib.IMAP4_SSL(config["MAIL_SERVER"])
-logging.info("Connected to IMAP server, logging in")
-imap.login(config["USERNAME"], config["PASSWORD"])
-logging.info("Logged in")
+def process_mailbox(mailbox: BaseMailBox) -> list[dict]:
+    emails = []
+    for msg in tqdm(mailbox.fetch()):
+        # TODO: Add attachment representation
+        email = {
+            "subject": msg.subject,
+            "from": msg.from_,
+            "to": msg.to,
+            "content": msg.text or msg.html,
+        }
+        emails.append(email)
 
-mailbox = "Archive"
+    return emails
 
-for mailbox in ["Junk", "Archive"]:
-    imap.select(mailbox)
 
-    status, response = imap.search(None, "ALL")
+def email_str(email: dict) -> str:
+    return f"""
+From: {email['from']}
+To: {email['to']}
+Subject: {email['subject']}
 
-    if status == "OK":
-        # Get the list of message IDs
-        message_ids = response[0].split()
+{email['content']}
+"""
 
-        # Count the number of messages
-        num_messages = len(message_ids)
-        print(f"Number of messages in {mailbox}: {num_messages}")
-    else:
-        print("Failed to retrieve messages.")
 
-imap.close()
-imap.logout()
+# get list of email bodies from INBOX folder
+mailbox = MailBox(config["MAIL_SERVER"]).login(
+    config["USERNAME"], config["PASSWORD"], "INBOX"
+)
+
+mailbox.folder.set("Junk")
+spam = process_mailbox(mailbox)
+mailbox.folder.set("Archive")
+ham = process_mailbox(mailbox)
+
+with open(path.join(SCRIPT_DIR, "dataset.csv"), "w") as f:
+    writer = csv.writer(f)
+    for i in tqdm(spam):
+        writer.writerow([1, email_str(i)])
+    for i in tqdm(ham):
+        writer.writerow([2, email_str(i)])
