@@ -4,3 +4,4 @@ __pycache__/
 dataset/
 publiccorpus/
 model.pth
+dataset.csv

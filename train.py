@@ -9,7 +9,8 @@ from torchtext.utils import logging
 from torchtext.vocab import build_vocab_from_iterator
 
 from model import EmailClassifier
-from spamcorpus import Spam
+# from spamcorpus import Spam
+from spam import Spam
 
 logging.basicConfig(
     format="[%(levelname)s] %(asctime)s - %(message)s",
@@ -21,7 +22,8 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 logging.info("Loading Tokenizer")
 tokenizer = get_tokenizer("basic_english")
-train_iter = iter(Spam(os.path.join(SCRIPT_DIR, "dataset"), split="train"))
+# train_iter = iter(Spam(os.path.join(SCRIPT_DIR, "dataset"), split="train"))
+train_iter = iter(Spam("dataset.csv", split="train"))
 
 
 def yield_tokens(data_iter):
@@ -55,7 +57,8 @@ def collate_batch(batch):
     return label_list.to(device), text_list.to(device), offsets.to(device)
 
 
-train_iter = Spam(os.path.join(SCRIPT_DIR, "dataset"), split="train")
+# train_iter = Spam(os.path.join(SCRIPT_DIR, "dataset"), split="train")
+train_iter = Spam("dataset.csv", split="train")
 dataloader = DataLoader(
     train_iter, batch_size=8, shuffle=False, collate_fn=collate_batch
 )
@@ -116,9 +119,12 @@ criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=LR)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, gamma=0.1)
 total_accu = None
-train_iter = Spam(os.path.join(SCRIPT_DIR, "dataset"), split="train")
-test_iter = Spam(os.path.join(SCRIPT_DIR, "dataset"), split="test")
-val_iter = Spam(os.path.join(SCRIPT_DIR, "dataset"), split="val")
+# train_iter = Spam(os.path.join(SCRIPT_DIR, "dataset"), split="train")
+# test_iter = Spam(os.path.join(SCRIPT_DIR, "dataset"), split="test")
+# val_iter = Spam(os.path.join(SCRIPT_DIR, "dataset"), split="val")
+train_iter = Spam("dataset.csv", split="train")
+test_iter = Spam("dataset.csv", split="test")
+val_iter = Spam("dataset.csv", split="val")
 
 train_dataloader = DataLoader(
     train_iter, batch_size=BATCH_SIZE, shuffle=True, collate_fn=collate_batch
@@ -165,11 +171,11 @@ def predict(text, text_pipeline):
 model = model.to("cpu")
 
 
-for i in ["dataset/1/00000.eml", "dataset/2/0010.eml"]:
-    with open(os.path.join(SCRIPT_DIR, i), "r") as f:
-        test_string = f.read()
-
-    print(f"This is {spam_label[predict(test_string, text_pipeline)]}")
+# for i in ["dataset/1/00000.eml", "dataset/2/0010.eml"]:
+#     with open(os.path.join(SCRIPT_DIR, i), "r") as f:
+#         test_string = f.read()
+#
+#     print(f"This is {spam_label[predict(test_string, text_pipeline)]}")
 
 
 torch.save(model, os.path.join(SCRIPT_DIR, "model.pth"))
