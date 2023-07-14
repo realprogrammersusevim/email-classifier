@@ -22,3 +22,8 @@ Finally, run `train.py` to train the model.
 Once you have the training dataset and you've run the `train.py` script you
 should be left with a `model.pth` file that you can use to classify and
 categorize spam and ham email.
+
+## TODO
+
+Use the model to classify new emails as they come in and automatically move them
+to Junk if they're identified as junk.
