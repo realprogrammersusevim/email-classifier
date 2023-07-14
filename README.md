@@ -13,14 +13,12 @@ The `convertcorpus.py` script converts training data from the
 corpuses into a more easily readable form. `spamcorpus.py` contains the class
 that turns the converted and cleaned corpus into a Pytorch dataset for training.
 
+To train on your own emails rename the `.env.example` file to `.env` and fill
+out the values. Run the `email_dataset.py` script to create the database file.
+Finally, run `train.py` to train the model.
+
 ## Usage
 
 Once you have the training dataset and you've run the `train.py` script you
 should be left with a `model.pth` file that you can use to classify and
 categorize spam and ham email.
-
-## TODO
-
-The goal is to make this a simple app that can automatically download and train
-on the user's emails to create a spam classifier fine-tuned specifically for
-them.
