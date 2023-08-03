@@ -23,12 +23,9 @@ To train on your own emails rename the `.env.example` file to `.env` and fill
 out the values. Run the `email_dataset.py` script to create the database file.
 Finally, run `train.py` to train the model.
 
-The `convertcorpus.py` script converts training data from the
-[SpamAssasin](https://spamassassin/apache.org/old/publiccorpus),
-[CSDMC2010](https://github.com/zrz1996/Spam-Email-Classifier-DataSet), and the
-[Fraud Email](https://www.kaggle.com/datasets/rtatman/fraudulent-email-corpus?resource=download)
-corpuses into a more easily readable form. `spamcorpus.py` contains the class
-that turns the converted and cleaned corpus into a Pytorch dataset for training.
+I have another training dataset that I created from all the available training
+data I could find out on the internet. You can find it at
+[https://github.com/realprogrammersusevim/email-dataset](https://github.com/realprogrammersusevim/email-dataset).
 
 ## Usage
 
