@@ -5,8 +5,8 @@ import time
 
 import torch
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from torchtext.data.utils import get_tokenizer
-from torchtext.utils import logging
 from torchtext.vocab import build_vocab_from_iterator
 
 from model import EmailClassifier
@@ -17,7 +17,7 @@ def yield_tokens(data_iter, tokenizer):
         yield tokenizer(text)
 
 
-def train(dataloader, optimizer, epoch, criterion, model):
+def train(dataloader, optimizer, epoch, criterion, model, writer):
     model.train()
     total_acc, total_count = 0, 0
     log_interval = 500
@@ -27,16 +27,17 @@ def train(dataloader, optimizer, epoch, criterion, model):
         optimizer.zero_grad()
         predicted_label = model(text, offsets)
         loss = criterion(predicted_label, label)
+        writer.add_scalar("Loss/train", loss, epoch)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.1)
         optimizer.step()
         total_acc += (predicted_label.argmax(1) == label).sum().item()
         total_count += label.size(0)
+        writer.add_scalar("Accuracy/train", total_acc / total_count, epoch)
         if idx % log_interval == 0 and idx > 0:
             elapsed = time.time() - start_time
             print(
-                "| epoch {:3d} | {:5d}/{:5d} batches "
-                "| accuracy {:8.3f}".format(
+                "| epoch {:3d} | {:5d}/{:5d} batches " "| accuracy {:8.3f}".format(
                     epoch, idx, len(dataloader), total_acc / total_count
                 )
             )
@@ -92,6 +93,8 @@ if __name__ == "__main__":
     else:
         from spam import Spam
 
+    writer = SummaryWriter()
+
     logging.basicConfig(
         format="[%(levelname)s] %(asctime)s - %(message)s",
         datefmt="%d-%b-%y %H:%M:%S",
@@ -123,6 +126,7 @@ if __name__ == "__main__":
     # num_class = len(set([label for (label, text) in train_iter]))
     num_class = 2
     vocab_size = len(vocab)
+    print(f"Vocab size: {vocab_size}")
     emsize = 64
     model = EmailClassifier(vocab_size, emsize, num_class).to(device)
 
@@ -132,7 +136,7 @@ if __name__ == "__main__":
     BATCH_SIZE = 64  # batch size for training
 
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=LR)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, gamma=0.1)
     total_accu = None
     if args.corpus:
@@ -156,20 +160,23 @@ if __name__ == "__main__":
 
     for epoch in range(1, EPOCHS + 1):
         epoch_start_time = time.time()
-        train(train_dataloader, optimizer, epoch, criterion, model)
+        train(train_dataloader, optimizer, epoch, criterion, model, writer)
         accu_val = evaluate(valid_dataloader, model, criterion)
+        writer.add_scalar("Accuracy/valid", accu_val, epoch)
         if total_accu is not None and total_accu > accu_val:
             scheduler.step()
         else:
             total_accu = accu_val
         print("-" * 59)
         print(
-            "| end of epoch {:3d} | time: {:5.2f}s | "
-            "valid accuracy {:8.3f} ".format(
+            "| end of epoch {:3d} | time: {:5.2f}s | " "valid accuracy {:8.3f} ".format(
                 epoch, time.time() - epoch_start_time, accu_val
             )
         )
         print("-" * 59)
+
+        writer.flush()
+
 
     print("Checking the results of test dataset.")
     accu_test = evaluate(test_dataloader, model, criterion)
