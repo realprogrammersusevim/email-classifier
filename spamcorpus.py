@@ -8,11 +8,11 @@ class Spam(Dataset):
     """
     Spam dataset
 
-    Parameters
+    Attributes
     ----------
     root_dir : str
         Path to the root directory of the dataset
-    split : str, optional
+    split : str, default="train"
         Split of the dataset to use
     """
 
@@ -60,6 +60,8 @@ class Spam(Dataset):
                     selected_files = files[split_idx:split_idx_val]
                 elif self.split == "val":
                     selected_files = files[split_idx_val:]  # 5% for validation
+                elif self.split == "all":
+                    selected_files = files
 
                 for file_name in selected_files:
                     current_sample = {}
