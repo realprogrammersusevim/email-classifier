@@ -1,8 +1,8 @@
 # Email Classifier
 
-Classifying spam using a Transformer Pytorch model. Modern spam filters still
-use simple Naive Bayesian classifiers. This project hopes to surpass the
-accuracy of these previous models using a Transformer architecture.
+Classifying spam using a Pytorch model. Modern spam filters still use simple
+Naive Bayesian classifiers. This project hopes to surpass the accuracy of these
+previous models using a better architecture.
 
 ## Setup
 

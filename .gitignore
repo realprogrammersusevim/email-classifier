@@ -5,3 +5,6 @@ dataset/
 publiccorpus/
 *.csv
 *.pth
+corpus
+runs
+*.pkl
