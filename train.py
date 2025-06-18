@@ -6,10 +6,64 @@ import time
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torchtext.data.utils import get_tokenizer
-from torchtext.vocab import build_vocab_from_iterator
+import re
+from collections import Counter, OrderedDict
 
 from model import EmailClassifier
+
+
+class Vocab:
+    """Custom Vocab class to replace torchtext's."""
+
+    def __init__(self, counter, specials):
+        self.counter = counter
+        self.specials = specials
+        self._token_to_idx = OrderedDict()
+        self._idx_to_token = []
+
+        for i, token in enumerate(specials):
+            self._token_to_idx[token] = i
+            self._idx_to_token.append(token)
+
+        for token, _ in counter.most_common():
+            if token not in self._token_to_idx:
+                idx = len(self._idx_to_token)
+                self._token_to_idx[token] = idx
+                self._idx_to_token.append(token)
+
+        self._default_index = -1
+
+    def __len__(self):
+        return len(self._idx_to_token)
+
+    def __getitem__(self, token):
+        return self._token_to_idx.get(token, self._default_index)
+
+    def __call__(self, tokens):
+        return [self[token] for token in tokens]
+
+    def get_itos(self):
+        return self._idx_to_token
+
+    def get_stoi(self):
+        return self._token_to_idx
+
+    def set_default_index(self, index):
+        self._default_index = index
+
+
+def build_vocab_from_iterator(iterator, specials):
+    """Custom build_vocab_from_iterator function to replace torchtext's."""
+    counter = Counter()
+    for tokens in iterator:
+        counter.update(tokens)
+    return Vocab(counter, specials)
+
+
+def basic_english_tokenizer(text):
+    text = text.lower()
+    text = re.sub(r"([.!?,'/()])", r" \1 ", text)
+    return text.split()
 
 
 def yield_tokens(data_iter, tokenizer):
@@ -37,7 +91,7 @@ def train(dataloader, optimizer, epoch, criterion, model, writer):
         if idx % log_interval == 0 and idx > 0:
             elapsed = time.time() - start_time
             print(
-                "| epoch {:3d} | {:5d}/{:5d} batches " "| accuracy {:8.3f}".format(
+                "| epoch {:3d} | {:5d}/{:5d} batches | accuracy {:8.3f}".format(
                     epoch, idx, len(dataloader), total_acc / total_count
                 )
             )
@@ -104,7 +158,7 @@ if __name__ == "__main__":
     SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
     logging.info("Loading Tokenizer")
-    tokenizer = get_tokenizer("basic_english")
+    tokenizer = basic_english_tokenizer
     if args.corpus:
         train_iter = iter(Spam(os.path.join(SCRIPT_DIR, args.corpus), split="all"))
     else:
@@ -169,14 +223,13 @@ if __name__ == "__main__":
             total_accu = accu_val
         print("-" * 59)
         print(
-            "| end of epoch {:3d} | time: {:5.2f}s | " "valid accuracy {:8.3f} ".format(
+            "| end of epoch {:3d} | time: {:5.2f}s | valid accuracy {:8.3f} ".format(
                 epoch, time.time() - epoch_start_time, accu_val
             )
         )
         print("-" * 59)
 
         writer.flush()
-
 
     print("Checking the results of test dataset.")
     accu_test = evaluate(test_dataloader, model, criterion)
