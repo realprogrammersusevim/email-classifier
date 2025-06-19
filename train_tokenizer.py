@@ -1,9 +1,10 @@
+import argparse
 import glob
-from tokenizers.pre_tokenizers import Whitespace
+
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
+from tokenizers.pre_tokenizers import Whitespace
 from tokenizers.trainers import BpeTrainer
-import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d")

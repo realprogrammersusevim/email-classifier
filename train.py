@@ -5,14 +5,12 @@ import time
 from functools import partial
 
 import torch
+from tokenizers import Tokenizer
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from tokenizers import Tokenizer
 
 from model import EmailClassifier
 from transformer_model import TransformerModel
-
-
 
 
 def train(dataloader, optimizer, epoch, criterion, model, writer):

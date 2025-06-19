@@ -34,11 +34,11 @@ def process_mailbox(mailbox: BaseMailBox) -> list[dict]:
 
 def email_str(email: dict) -> str:
     return f"""
-From: {email['from']}
-To: {email['to']}
-Subject: {email['subject']}
+From: {email["from"]}
+To: {email["to"]}
+Subject: {email["subject"]}
 
-{email['content']}
+{email["content"]}
 """
 
 
