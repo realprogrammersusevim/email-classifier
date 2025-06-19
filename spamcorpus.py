@@ -50,7 +50,7 @@ class Spam(Dataset):
         for class_name in classes:
             class_dir = os.path.join(self.root_dir, class_name)
             if os.path.isdir(class_dir):
-                files = os.listdir(class_dir)
+                files = sorted(os.listdir(class_dir))
 
                 split_idx = int(len(files) * 0.85)  # 85% for training
                 split_idx_val = split_idx + int(len(files) * 0.10)  # 10% for testing
