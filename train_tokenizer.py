@@ -7,12 +7,15 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d")
+parser.add_argument("-v")
+parser.add_argument("-m")
 args = parser.parse_args()
 
 tokenizer = Tokenizer(BPE())
 tokenizer.pre_tokenizer = Whitespace()
 trainer = BpeTrainer(
-    # vocab_size=8000,
+    max_token_length=int(args.m),
+    vocab_size=int(args.v),
     special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],
     show_progress=True,
 )
