@@ -8,3 +8,4 @@ publiccorpus/
 corpus
 runs
 *.pkl
+*.json
