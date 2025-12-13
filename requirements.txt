@@ -21,7 +21,7 @@ six==1.17.0
 sympy==1.14.0
 tensorboard==2.19.0
 tensorboard-data-server==0.7.2
-torch==2.7.1
+torch==2.8.0
 tqdm==4.66.3
 typing-extensions==4.14.0
 urllib3==2.6.0
