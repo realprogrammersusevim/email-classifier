@@ -1,7 +1,7 @@
 absl-py==2.3.0
 certifi==2025.6.15
 charset-normalizer==3.4.2
-filelock==3.18.0
+filelock==3.20.1
 fsspec==2025.5.1
 grpcio==1.73.0
 idna==3.10
