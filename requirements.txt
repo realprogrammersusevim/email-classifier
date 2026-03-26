@@ -15,7 +15,7 @@ numpy==2.3.0
 packaging==25.0
 protobuf==6.33.5
 python-dotenv==1.0.0
-requests==2.32.4
+requests==2.33.0
 setuptools==80.9.0
 six==1.17.0
 sympy==1.14.0
