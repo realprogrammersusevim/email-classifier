@@ -16,7 +16,7 @@ packaging==25.0
 protobuf==6.33.5
 python-dotenv==1.2.2
 requests==2.33.0
-setuptools==80.9.0
+setuptools==83.0.0
 six==1.17.0
 sympy==1.14.0
 tensorboard==2.19.0
